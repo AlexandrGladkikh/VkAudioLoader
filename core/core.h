@@ -2,51 +2,30 @@
 #define CORE
 
 #include <QWidget>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QUrl>
-
-#ifdef QT_DEBUG
-#include <QDebug>
-#endif
+#include "network/vkapi.h"
 
 #include "../gui/mainwindow.h"
+#include "common/common.h"
+
+namespace core
+{
+//////////////////////////////
 
 class Core : public QWidget
 {
     Q_OBJECT
 
 private:
-    QNetworkAccessManager* networkManager;
-    MainWindow* mainWindow;
-
-    QString accessToken;
-
-    int state;
+    gui::MainWindow* main_window;
+    vk_api::VkApi* vk_api;
 
 public:
     Core(QWidget* parent = 0);
     ~Core();
-
-private slots:
-    void GetData(QNetworkReply * reply);
-
-public slots:
-    void Login(AuthData);
-    void Logout();
-
-    void Start();
-    void Stop();
-    void Pause();
-
-    void GetSelectedItem(QVector<QString> itemValues);
-
-signals:
-    void SendItems(QVector<QString>);
-    void SendStateitem(QString itemValue);
-
 };
+
+//////////////////////////////
+}
 
 #endif // CORE
 
