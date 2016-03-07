@@ -13,6 +13,7 @@ QString AudioLinks::get_next_link()
 {
     if (!(next_audio_index < need_load_audio.size()))
     {
+        common::log(QString("if (!(next_audio_index < need_load_audio.size()))"));
         next_audio_index = 0;
         return QString("");
     }
@@ -23,6 +24,7 @@ QString AudioLinks::get_next_link()
         return it.value();
     else
     {
+        common::log(QString("if (it != audio_links.end()) else"));
         next_audio_index = 0;
         return QString("");
     }
@@ -49,7 +51,7 @@ size_t get_audio_info(QString &source, QString& audio_name, QString& link, size_
     return current_pos;
 }
 
-VkAudio::VkAudio(common::OAuthData &oauth_data, QWidget *parent) : QWidget(parent), oauth_data(oauth_data), current_action(0), stop(false)
+VkAudio::VkAudio(common::OAuthData &oauth_data, QWidget *parent) : QWidget(parent), oauth_data(oauth_data), current_action(0), stop(false), create_dir(false)
 {
     network_manager = new QNetworkAccessManager(this);
 
@@ -94,9 +96,13 @@ void VkAudio::save_audio_item(QNetworkReply* audio_data)
 {
     common::log(QString("save_audio_item"));
 
-    QDir dir;
 
-    dir.mkdir(save_path.at(0) + "/VkMusic/");
+    if (!create_dir)
+    {
+        QDir dir;
+        dir.mkdir(save_path.at(0) + "/VkMusic/");
+        create_dir = true;
+    }
 
     common::log(audio_links.need_load_audio[audio_links.next_audio_index - 1]);
     audio_links.need_load_audio[audio_links.next_audio_index - 1].replace("\"", "");
@@ -132,6 +138,8 @@ void VkAudio::save_audio_item(QNetworkReply* audio_data)
     {
         get_next_audio();
     }
+    else
+        emit download_finished();
 }
 
 void VkAudio::get_next_audio()
@@ -157,7 +165,14 @@ void VkAudio::reply_finished(QNetworkReply* reply)
         common::log(QString("error"));
         common::log(error);
         if (current_action == DOWNLOAD_AUDIO_ITEMS)
-            get_next_audio();
+        {
+            if (!stop)
+            {
+                get_next_audio();
+            }
+            else
+                emit download_finished();
+        }
 
         return;
     }
@@ -196,13 +211,16 @@ void VkAudio::download_audio(QVector<QString> &audio_list)
     common::log(QString("download_audio"));
     current_action = DOWNLOAD_AUDIO_ITEMS;
     audio_links.need_load_audio = audio_list;
+    audio_links.next_audio_index = 0;
     stop = false;
+    create_dir = false;
 
     get_next_audio();
 }
 
 void VkAudio::stop_download_audio()
 {
+    common::log(QString("stop_download_audio"));
     stop = true;
 }
 

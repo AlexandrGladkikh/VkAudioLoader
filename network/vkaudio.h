@@ -56,6 +56,8 @@ private:
 
     bool stop;
 
+    bool create_dir;
+
 private:
     void source_audio_list_handler(QString &source);
 

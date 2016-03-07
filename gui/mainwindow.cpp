@@ -88,13 +88,13 @@ void MainWindow::logout_slot()
     if (state & CONNECTED)
     {
         emit logout_signal();
+        music_list->clear();
 
         state &= ~CONNECTED;
         state |= DISCONNECTED;
 
         if (state & START)
         {
-            state |= ~START;
             state |= STOP;
             emit stop_download_audio_signal();
         }
@@ -126,22 +126,29 @@ void MainWindow::download_audio_slot()
     for (QList<QListWidgetItem*>::iterator it_audio_widget = selected_items.begin(); it_audio_widget != selected_items.end(); ++it_audio_widget, ++it_names)
         (*it_names) = (*it_audio_widget)->text();
 
+    for (it_names = item_names.begin(); it_names != item_names.end(); ++it_names)
+    {
+        (*it_names).replace("done ", "");
+        (*it_names).replace("fail ", "");
+    }
+
     common::log(QString("download_audio_slot"));
     emit download_audio_signal(item_names);
 
     state |= START;
+    state &= ~STOP;
 }
 
 void MainWindow::stop_download_audio_slot()
 {
-    if (!(state & CONNECTED))
+    common::log(QString("stop_download_audio_slot"));
+    if (!(state & CONNECTED) || (state & STOP))
         return;
 
     if (state & START)
     {
-        state &= ~START;
         state |= STOP;
-        common::log(QString("stop_download_audio_slot"));
+        common::log(QString("send signal stop_download_audio_slot"));
         emit stop_download_audio_signal();
     }
 }
